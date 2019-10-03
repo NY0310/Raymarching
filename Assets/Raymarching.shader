@@ -13,11 +13,26 @@
         {
             return length(pos) - radius;
         }
-        
-        float DistanceFunc(float3 pos)
-        {
-            return sphere(pos, 1.f);
-        }
+
+		float3 mod(float3 a, float3 b)
+		{
+			return frac(abs(a / b)) * abs(b);
+		}
+
+		float3 repeat(float3 pos, float3 span)
+		{
+			return mod(pos, span) - span * 0.5;
+		}
+
+	float roundBox(float3 pos, float3 size, float round)
+		{
+			return length(max(abs(pos) - size * 0.5, 0.0)) - round;
+		}
+
+		float DistanceFunc(float3 pos)
+		{
+			return roundBox(repeat(pos, 2.f), 1.f, 0.2f);
+		}
         
         float GetDepth(float3 pos)
         {

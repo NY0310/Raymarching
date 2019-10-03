@@ -1,9 +1,5 @@
-﻿Shader "Hidden/Raymarching"
+﻿Shader "Raymarching"
 {
-    Properties
-    {
-        _MainTex ("Texture", 2D) = "white" { }
-    }
     SubShader
     {
         // No culling or depth

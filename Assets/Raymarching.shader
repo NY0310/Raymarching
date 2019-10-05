@@ -24,7 +24,7 @@
 			return mod(pos, span) - span * 0.5;
 		}
 
-	float roundBox(float3 pos, float3 size, float round)
+	    float roundBox(float3 pos, float3 size, float round)
 		{
 			return length(max(abs(pos) - size * 0.5, 0.0)) - round;
 		}

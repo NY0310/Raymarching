@@ -20,28 +20,36 @@ ShaderVariantCollection:
         passType: 4
       - keywords: DIRECTIONAL LIGHTPROBE_SH SHADOWS_SCREEN
         passType: 4
+      - keywords: DIRECTIONAL LIGHTPROBE_SH _EMISSION
+        passType: 4
       - keywords: DIRECTIONAL
         passType: 5
       - keywords: SHADOWS_DEPTH
         passType: 8
-      - keywords: LIGHTPROBE_SH
+      - keywords: LIGHTPROBE_SH UNITY_HDR_ON
+        passType: 10
+      - keywords: LIGHTPROBE_SH UNITY_HDR_ON _EMISSION
         passType: 10
   - first: {fileID: 64, guid: 0000000000000000f000000000000000, type: 0}
     second:
       variants:
-      - keywords: SHADOWS_SINGLE_CASCADE SHADOWS_SPLIT_SPHERES
+      - keywords: SHADOWS_SPLIT_SPHERES
         passType: 0
   - first: {fileID: 74, guid: 0000000000000000f000000000000000, type: 0}
     second:
       variants:
       - keywords: 
         passType: 0
+      - keywords: UNITY_HDR_ON
+        passType: 0
   - first: {fileID: 69, guid: 0000000000000000f000000000000000, type: 0}
     second:
       variants:
-      - keywords: 
+      - keywords: DIRECTIONAL UNITY_HDR_ON
         passType: 0
-      - keywords: DIRECTIONAL SHADOWS_SCREEN
+      - keywords: DIRECTIONAL SHADOWS_SCREEN UNITY_HDR_ON
+        passType: 0
+      - keywords: DIRECTIONAL SHADOWS_SHADOWMASK UNITY_HDR_ON
         passType: 0
   - first: {fileID: 106, guid: 0000000000000000f000000000000000, type: 0}
     second:
@@ -76,5 +84,5 @@ ShaderVariantCollection:
   - first: {fileID: 4800000, guid: b385311fd3a87418d813d18b7b4d1cab, type: 3}
     second:
       variants:
-      - keywords: 
+      - keywords: UNITY_HDR_ON
         passType: 10

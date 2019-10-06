@@ -81,7 +81,7 @@
                     currentPos += rayDir * _MarchingDistance;
                 }
                 
-                fixed4 col = 1;
+                fout out_fout;
                 if(!isCollided) discard;
                 float3 collidedWPos = mul(unity_ObjectToWorld, float4(currentPos, 1));
                 float3 ddxVec = normalize(ddx(collidedWPos));
@@ -89,9 +89,9 @@
                 float3 normal = cross(ddyVec, ddxVec);
                 float3 lightDir = UnityWorldSpaceLightDir(collidedWPos);
                 float NdotL = dot(normal, lightDir);
-                col.rgb = NdotL * 0.5 + 0.5;
-                col.depth = getDepth(currentPos);
-                return col;
+                out_fout.col.rgb = NdotL * 0.5 + 0.5;
+                out_fout.depth = getDepth(currentPos);
+                return out_fout;
             }
             ENDCG
             

@@ -27,7 +27,7 @@
             #include "UnityCG.cginc"
            #include "Assets/GenerativeProgramming1/Noise/Noise.cginc"
 
-           unit _Iteration;
+           uint _Iteration;
            float _Radius;
 
            float _Threshold;
@@ -47,29 +47,102 @@
 
             struct v2f
             {
-                float2 uv: TEXCOORD0;
                 float4 vertex: SV_POSITION;
+                float3 oPos: TEXCOORD0
             };
+
+            float getNoise(float3 pos);
+            float getDepth(float3 oPos);
+            float distFromSphere(float3 pos);
             
             v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv;
+                o.oPos = v.vertex.xyz;
                 return o;
             }
-            
-            sampler2D _MainTex;
-            
+                        
             fixed4 frag(v2f i): SV_Target
             {
-                fixed4 col = tex2D(_MainTex, i.uv);
-                // just invert the colors
-                col.rgb = 1 - col.rgb;
-                return col;
+                //カメラの位置（オブジェクト座標系）
+                float3 cameraOpos = mul(unity_WorldToObject,float4(_WorldSpaceCameraPos,1));
+                float3 rayDir = normalize(i.oPos - cameraOpos);
+                float3 delta = rayDir * (1.0 / _Iteration);
+                float3 currentPos = i.oPos;
+                bool isCollided = false;
+                for(uint j = 0; j < _Iteration; j ++)
+                {
+                     //レイが描画する球の外側なら次のループにスキップ
+                    float dist = distFromSphere(currentPos);
+                    if(dist > 0){
+                        currentPos += delta;
+                        continue;
+                    }
+                    float noiseValue = getNoise(currentPos);
+                    isCollided = noiseValue > _Threshold;
+                    if(isCollided) break;
+                    currentPos += delta;
+                }
+
+                if(!isCollided) discard;
+                fout o;
+                UNITY_INITIALIZE_OUTPUT(fout,o);
+                float3 collidedWpos = mul(unity_ObjectToWorld, float4(currentPos, 1));
+                //隣接ピクセルで法線推定
+                float3 ddxVec = normalize(ddx(collidedWpos));
+                float3 ddyVec = normalize(ddy(collidedWpos));
+                float3 lightDir = UnityWorldSpaceLightDir(collidedWpos);
+                float NdotL = dot(normalize, lightDir);
+                o.col.rgb = NdotL * 0.5 + 0.5;
+                o.depth = getDepth(currentPos);
+                return o;
+            }
+
+              float getNoise(float3 pos)
+            {
+                float value = 0;
+                float3 noisePos = pos * _NoiseScale;
+                if(_NoiseType == 0)
+                {
+                value = valNoise(noisePos);
+                }
+                else if(_NoiseType == 1)
+                {
+                value = pNoise(noisePos);
+                }
+                else if(_NoiseType == 2)
+                {
+                value = cNoise(noisePos);
+                }
+                else if(_NoiseType == 3)
+                {
+                value = curlNoise(noisePos).r * 0.5 + 0.5;
+                }
+                else if(_NoiseType == 4)
+                {
+                value = fbm(noisePos);
+                }
+                return value; 
+            }
+
+            float getDepth(float3 oPos)
+            {
+                float4 pos = UnityObjectToClipPos(float4(oPos, 1.0));
+                //depthの算出方法はDirect3DとOpenGL系で違う。
+                #if UNITY_UV_STARTS_AT_TOP
+                    return pos.z / pos.w;
+                #else 
+                    return(pos.z / pos.w) * 0.5 + 0.5;
+                #endif
+            }
+
+            //球の距離関数
+            float distFromSphere(float3 pos)
+            {
+                return length(pos) - _Radius;
             }
             ENDCG
-            
         }
     }
 }

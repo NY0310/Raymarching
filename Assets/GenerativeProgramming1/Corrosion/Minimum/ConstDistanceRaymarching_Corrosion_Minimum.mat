@@ -63,15 +63,18 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Iteration: 0
+    - _Iteration: 2048
     - _Metallic: 0
     - _Mode: 0
+    - _NoiseScale: 7.6
+    - _NoiseType: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _Radius: 0.45
+    - _Radius: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
+    - _Threshold: 0.453
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:

@@ -80,6 +80,8 @@
                 float3 delta = rayDir * (1.0 / _Iteration);
                 float3 currentPos = i.oPos;
                 bool isCollided = false;
+                uint loopNumInSphere = 0;
+                float noiseValue = 0;
                 for (uint j = 0; j < _Iteration; j ++)
                 {
                     //レイが描画する球の外側なら次のループにスキップ
@@ -89,6 +91,7 @@
                         currentPos += delta;
                         continue;
                     }
+                    loopNumInSphere++;
                     float noiseValue = getNoise(currentPos);
                     isCollided = noiseValue > _Threshold;
                     if(isCollided) break;

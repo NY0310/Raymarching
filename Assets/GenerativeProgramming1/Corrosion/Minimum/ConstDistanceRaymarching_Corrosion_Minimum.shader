@@ -43,6 +43,18 @@
             float _Threshold;
             int _NoiseType;
             float _NoiseScale;
+             //Inside of Object
+            fixed3 _InnerColor;
+
+            //RimLight
+            fixed3 _RimLightColor;
+            float _RimLightPower;
+
+            //Specular
+            float _SpecularPower;
+            
+            //Surface
+            float _SurfaceGradientWidth;
             
             struct appdata
             {
@@ -114,7 +126,9 @@
                 UNITY_INITIALIZE_OUTPUT(fout, o);
                 float3 collidedWpos = mul(unity_ObjectToWorld, float4(currentPos, 1));
                 //隣接ピクセルで法線推定
-                float3 normal = getDDCrossNormal(collidedWPos);
+                float3 ddxVec = ddx(collidedWpos);
+                float3 ddyVec = ddy(collidedWpos);
+                float3 normal = normalize(cross(ddyVec, ddxVec));
                 //ライトからオブジェクトへのベクトル
                 float3 lightDir = UnityWorldSpaceLightDir(collidedWpos);
                 //カメラからオブジェクトへのベクトル
@@ -128,18 +142,18 @@
                 float RdotL = dot(reflectDir, lightDir);
                 
                 float3 reflectCol = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, reflectDir);
-                float3 rimLightCol = pow(saturate(1 - NdotL), _SpecularPower)　 * _RimLightColor;
-                float3 surfaceCol = pow(saturate(RdotL), _SpecularPower) * _LightColor0;
+                float3 rimLightCol = pow(saturate(1 - NdotL), _RimLightPower)*_RimLightColor;
+                float3 specularCol = pow(saturate(RdotL), _SpecularPower) * _LightColor0;
                 
                 //オブジェクトの球に沿った表面とそれ以外で処理を分岐
-                bool isSurface = loopNumInSPhere == 1;
+                bool isSurface = loopNumInSphere == 1;
                 if (isSurface)
                 {
                     //スペキュラ、反射、リムライトを足して
                     float gradientWidth = (1.0 - _Threshold) * _SurfaceGradientWidth;
-                    float k = smoothstep(1.0 - _Threshold) * _Threshold + gradientWidth,noizeValue);
+                    float k = smoothstep(_Threshold,_Threshold + gradientWidth,noiseValue);
                     float3 surfaceCol = specularCol + reflectCol + rimLightCol;
-                    o.col.rgb = lerp(_InnerColor, surfaceCol + k);
+                    o.col.rgb = lerp(_InnerColor, surfaceCol, k);
                 }
                 else
                 {

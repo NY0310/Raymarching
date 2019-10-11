@@ -5,6 +5,7 @@
         [Header(Raymarching)]
         [IntRange]_Iteration ("Marching Iteration", Range(0, 2048)) = 256
         _Radius ("Radius", Range(0, 0.5)) = 0.45
+        [IntRange]_BinarySearchIteration ("Binary Search Iteration", Range(0, 20)) = 10
         
         [Header(Noise)]
         _Threshold ("Threshold", Range(0, 1)) = 0.5
@@ -39,17 +40,18 @@
             
             uint _Iteration;
             float _Radius;
+            uint _BinarySearchIteration; //二分探索の回数
             
             float _Threshold;
             int _NoiseType;
             float _NoiseScale;
-             //Inside of Object
+            //Inside of Object
             fixed3 _InnerColor;
-
+            
             //RimLight
             fixed3 _RimLightColor;
             float _RimLightPower;
-
+            
             //Specular
             float _SpecularPower;
             
@@ -77,6 +79,10 @@
             float getDepth(float3 oPos);
             float distFromSphere(float3 pos);
             float3 getDDCrossNormal(float3 wPos);
+            float3 binarySearch(float3 currentPos, float3 previousPos, float threshold, uint iteration);
+            
+            
+            
             
             v2f vert(appdata v)
             {
@@ -111,17 +117,18 @@
                         continue;
                     }
                     //レイが描画する球の内側ならノイズによる凹みを見てレイを続けるか判定
-                    loopNumInSphere++;
+                    loopNumInSphere ++ ;
                     //ノイズによる凹みの深さを取得
                     float noiseValue = getNoise(currentPos);
                     //指定した深さより深い場合レイの更新を終了
                     isCollided = noiseValue > _Threshold;
-                    if(isCollided) break;
+                    if (isCollided) break;
                     //レイを更新
                     currentPos += delta;
                 }
                 
-                if(!isCollided) discard;
+                if (!isCollided) discard;
+                currentPos = binarySearch(currentPos, currentPos - delta, _Threshold, _BinarySearchIteration);
                 fout o;
                 UNITY_INITIALIZE_OUTPUT(fout, o);
                 float3 collidedWpos = mul(unity_ObjectToWorld, float4(currentPos, 1));
@@ -142,7 +149,7 @@
                 float RdotL = dot(reflectDir, lightDir);
                 
                 float3 reflectCol = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, reflectDir);
-                float3 rimLightCol = pow(saturate(1 - NdotL), _RimLightPower)*_RimLightColor;
+                float3 rimLightCol = pow(saturate(1 - NdotL), _RimLightPower) * _RimLightColor;
                 float3 specularCol = pow(saturate(RdotL), _SpecularPower) * _LightColor0;
                 
                 //オブジェクトの球に沿った表面とそれ以外で処理を分岐
@@ -151,7 +158,7 @@
                 {
                     //スペキュラ、反射、リムライトを足して
                     float gradientWidth = (1.0 - _Threshold) * _SurfaceGradientWidth;
-                    float k = smoothstep(_Threshold,_Threshold + gradientWidth,noiseValue);
+                    float k = smoothstep(_Threshold, _Threshold + gradientWidth, noiseValue);
                     float3 surfaceCol = specularCol + reflectCol + rimLightCol;
                     o.col.rgb = lerp(_InnerColor, surfaceCol, k);
                 }
@@ -167,6 +174,22 @@
                 return o;
             }
             
+            float3 binarySearch(float3 currentPos, float3 previousPos, float threshold, uint iteration)
+            {
+                float3 back = previousPos;
+                float3 front = currentPos;
+                for (uint k = 0; k < iteration; k ++)
+                {
+                    float3 center = 0.5 * (front + back);
+                    float noiseValue = getNoise(center);
+                    float dist = distFromSphere(center);//球の外側には出ないようにする
+                    bool isCollided = noiseValue > threshold && dist <= 0;
+                    front = lerp(front, center, isCollided);
+                    back = lerp(center, back, isCollided);
+                }
+                return front;
+            }
+            
             float3 getDDCrossNormal(float3 wPos)
             {
                 float3 ddxVec = ddx(wPos);
@@ -178,7 +201,7 @@
             {
                 float value = 0;
                 float3 noisePos = pos * _NoiseScale;
-                if(_NoiseType == 0)
+                if (_NoiseType == 0)
                 {
                     value = valNoise(noisePos);
                 }
